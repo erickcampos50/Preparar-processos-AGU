@@ -9,24 +9,26 @@ import zipfile
 from PIL import Image
 import pdfkit
 import streamlit as st
-
+#%%
+# Constantes
+VALID_CHARS = set("-_.()[] %s%s" % (string.ascii_letters, string.digits))
+IMAGE_EXTS = {'.jpeg', '.jpg', '.png', '.JPEG', '.JPG', '.PNG'}
+OTHER_EXTS = {'.DOC', '.DOCX', '.doc', '.docx', '.xls', '.xlsx'}
 
 
 #%%
 def safe_filename(filename):
-    valid_chars = set("-_.()[] %s%s" % (string.ascii_letters, string.digits))
-    return ''.join(c for c in filename if c in valid_chars)
+    return ''.join(c for c in filename if c in VALID_CHARS)
 
 def convert_html_to_pdf(html_path, pdf_path):
     # st.write(f"Convertendo {os.path.basename(html_path)} para PDF...")
     try:
         pdfkit.from_file(html_path, pdf_path)
     except Exception as e:
-        print(f"Erro ao converter {html_path} para PDF. Erro: {e}")
+        st.error(f"Error converting {html_path} to PDF. Error: {e}")
 
 def extract_and_process_files(zip_path, output_folder):
-    image_exts = {'.jpeg', '.jpg', '.png','.JPEG','.JPG','.PNG'}
-    other_exts = {'.DOC', '.DOCX', '.doc', '.docx', '.xls', '.xlsx'}
+   
     
     def process_directory(directory):
         items = os.listdir(directory)
@@ -35,7 +37,7 @@ def extract_and_process_files(zip_path, output_folder):
             current_path = os.path.join(directory, item)
             extension = os.path.splitext(item)[-1]
 
-            if extension in image_exts:
+            if extension in IMAGE_EXTS:
                 # st.write(f"Convertendo imagem {os.path.basename(current_path)} para PDF")
                 with Image.open(current_path) as image:
                     img_rgb = image.convert('RGB')
@@ -47,7 +49,7 @@ def extract_and_process_files(zip_path, output_folder):
 
 
 
-            elif extension in other_exts:
+            elif extension in OTHER_EXTS:
                 continue
             
 
@@ -68,7 +70,7 @@ def extract_and_process_files(zip_path, output_folder):
     convert_all_html_to_pdf(output_folder)
 
     # Check for nested zips and process until no new zip files are found
-    extensions_to_check = tuple(image_exts) + ('.zip',)
+    extensions_to_check = tuple(IMAGE_EXTS) + ('.zip',)
     while any(fname.endswith(extensions_to_check) for fname in os.listdir(output_folder)):
         process_directory(output_folder)
         convert_all_html_to_pdf(output_folder)
@@ -105,48 +107,23 @@ def remove_empty_files(output_folder):
 
 
 
-# ESTA É UMA FUNÇÃO PROVISÓRIA, QUE IRÁ VARRER O DIRETÓRIO RAIZ PARA EXIBIR OS ARQUIVOS. A INTENÇÃO É ENTENDER COMO FUNCIONA A INSTÂNCIA DO STREAMLIT COM RELAÇÃO AOS ARQUIVOS CONVERTIDOS E ATUAR PARA EVITAR QUE O DISCO FIQUE SOBRECARREGADO
-def list_files_from_root():
-    """Lista todos os arquivos do diretório raiz com tamanho e data de criação."""
-    root_dir = os.path.dirname(os.path.abspath(__file__))  # Obtém o diretório atual do script.
-    files = [f for f in os.listdir(root_dir) if os.path.isfile(os.path.join(root_dir, f))]
-    
-    file_details = []
-    for file in files:
-        file_path = os.path.join(root_dir, file)
-        
-        # Tamanho do arquivo em bytes
-        file_size = os.path.getsize(file_path)
-        
-        # Data de criação do arquivo
-        creation_timestamp = os.path.getctime(file_path)
-        creation_date = datetime.datetime.fromtimestamp(creation_timestamp).strftime('%Y-%m-%d %H:%M:%S')
-        
-        file_details.append((file, file_size, creation_date))
-    
-    return file_details
-
+# 
 
 
 
 def delete_old_zip_files():
-    """Exclui arquivos ZIP com mais de X horas."""
+    """Exclui arquivos ZIP com mais de 10 minutos."""
     root_dir = os.path.dirname(os.path.abspath(__file__))  # Obtém o diretório atual do script.
     current_time = time.time()  # Obtém o tempo atual em segundos.
-    
-
-    # Lista todos os arquivos ZIP do diretório.
-    zip_files = [f for f in os.listdir(root_dir) if f.endswith('.zip') and os.path.isfile(os.path.join(root_dir, f))]
 
     deleted_files = []  # Lista de arquivos excluídos.
 
-    # Verifica cada arquivo ZIP.
-    for file in zip_files:
+    # Lista todos os arquivos do diretório.
+    for file in os.listdir(root_dir):
         file_path = os.path.join(root_dir, file)
-        file_creation_time = os.path.getctime(file_path)  # Obtém o tempo de criação do arquivo em segundos.
 
-        
-        if current_time - file_creation_time > 43200:
+        # Verifica se o arquivo tem a extensão .zip e é mais antigo do que 10 minutos
+        if file.endswith('.zip') and os.path.isfile(file_path) and current_time - os.path.getctime(file_path) > 600:
             os.remove(file_path)  # Remove o arquivo.
             deleted_files.append(file)  # Adiciona o nome do arquivo à lista de arquivos excluídos.
 
@@ -156,6 +133,11 @@ def delete_old_zip_files():
 #%% SEÇÃO MAIN
 
 def main():
+
+
+    
+
+
     # Inicializar o estado da sessão
     if 'already_processed' not in st.session_state:
         st.session_state.already_processed = False
@@ -168,29 +150,8 @@ def main():
     st.markdown("""
                 Esta ferramenta visa facilitar o atendimento aos procedimentos determinados pela AGU para envio de documentação para análise, realizando o processamento, extração, conversão e ajuste de nomes de todos os arquivos de forma automatizada.
 
-                Para utilizá-la é preciso gerar gerar uma versão ZIP do seu processo *SEI* a partir do excelente [**SEI PRO**](https://sei-pro.github.io/sei-pro/) e inseri-la aqui. Acesse o tutorial abaixo para mais instruções.
+                Para utilizá-la é preciso gerar uma versão ZIP do seu processo *SEI* a partir do excelente [**SEI PRO**](https://sei-pro.github.io/sei-pro/) e inseri-la aqui. Acesse o tutorial abaixo para mais instruções.
     """)
-
-    with st.expander("Depuração (apenas para testes da ferramenta)"):
-        # Defina o título e as informações da página.
-        st.write("Clique no botão abaixo para listar todos os arquivos do diretório raiz:")
-        # Botão para listar arquivos.
-        if st.button("Listar Arquivos"):
-            file_details = list_files_from_root()
-            if file_details:
-                st.write("Detalhes dos arquivos no diretório raiz:")
-                for file_info in file_details:
-                    st.write(f"Nome: {file_info[0]}, Tamanho: {file_info[1]} bytes, Data de criação: {file_info[2]}")
-            else:
-                st.write("Nenhum arquivo encontrado no diretório raiz.")
-        if st.button("Excluir Arquivos ZIP Antigos"):
-            deleted_files = delete_old_zip_files()
-            if deleted_files:
-                st.write("Arquivos ZIP excluídos:")
-                for file in deleted_files:
-                    st.write(file)
-            else:
-                st.write("Nenhum arquivo ZIP antigo encontrado para exclusão.")
 
 
 
@@ -202,6 +163,15 @@ def main():
 
         Este tutorial guiará você através do processo de conversão de arquivos do SEI para o padrão AGU utilizando o Conversor de processos SEI->AGU.
 
+                    
+
+        ## Tutorial em vídeo
+        
+        Foi preparado um tutorial em vídeo com todas as etapas. 
+            Obs: a conversão dos arquivos DOC não faz parte do escopo do vídeo, por isso não foi abordada
+                    
+        [Link para o vídeo](https://youtu.be/jOe9KC67sWQ)
+                    
         ## Requisitos iniciais
         1. **SEI PRO** - Antes de utilizar o Conversor de processos SEI->AGU, você deve ter instalado e ativo o [SEI PRO](https://sei-pro.github.io/sei-pro/). Este é uma extensão para navegadores que adiciona novas funcionalidades ao SEI convencional e está disponível para Chrome, Firefox, Edge, e outros navegadores baseados em Chromium.
 
@@ -263,6 +233,9 @@ def main():
         - O Conversor de processos SEI->AGU **não consegue converter arquivos DOC/DOCX para PDF**. Essa conversão terá que ser feita manualmente.
 
         Esperamos que este tutorial tenha sido útil!
+                    
+
+                    
    
         """)
         
@@ -317,7 +290,7 @@ def main():
 
         # Atualize a barra de progresso
         progress_bar.progress(25)
-        progress_text.text("25% completo: Arquivo salvo temporariamente.")
+        progress_text.text("25% completo: Upload do arquivo concluído. Iniciando processamento no servidor.")
 
         # Extrai e processa o arquivo ZIP.
         if not os.path.exists(output_folder):
@@ -327,7 +300,7 @@ def main():
 
         # Atualize a barra de progresso
         progress_bar.progress(75)   
-        progress_text.text("75% completo: Arquivos extraídos e processados.")
+        progress_text.text("75% completo: Arquivos extraídos e processados. Gerando arquivo final")
 
 
         remove_empty_files(output_folder)
@@ -338,9 +311,8 @@ def main():
 
         # Atualize a barra de progresso para 100% e mostre a mensagem de conclusão
         progress_bar.progress(100)
-        progress_text.text("100% completo: Tudo concluído!")
-        st.markdown("✅ Processamento concluído!")
-
+        progress_text.text("100% completo: Estamos gerando o link para download")
+        
         # Adicione o arquivo de saída à lista no session_state
         st.session_state.output_filenames.append(output_filename)
 
@@ -363,6 +335,10 @@ def main():
                 file_name=output_filename,
                 mime="application/zip"
             )
+    
+
+    st.caption("""
+                ###### **Créditos:** Esta aplicação foi desenvolvida por Erick C. Campos para Universidade Federal de Juiz de Fora - Campus GV para atuar em sintonia com a excelente ferramenta SEI PRO desenvolvida por Pedro Soares.""")
 
 
     
@@ -374,7 +350,8 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+    # Esta função irá remover os arquivos antigos antes do inicio das atividades para evitar que haja estouro do armazenamento na criação de novos arquivos pelo usuário atual
+    delete_old_zip_files()
 
 
 # %%
