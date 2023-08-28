@@ -43,9 +43,13 @@ def extract_and_process_files(zip_path, output_folder):
                     img_rgb.save(target_path_pdf)
                 os.remove(current_path)
 
+
+
+
             elif extension in other_exts:
                 continue
             
+
             elif extension == '.zip':
                 # st.write(f"Extraindo {os.path.basename(current_path)}...")
                 with zipfile.ZipFile(current_path, 'r') as inner_zip:
@@ -111,9 +115,83 @@ def main():
 
     # Defina o título e as informações da página.
     st.title("Conversor de arquivos para envio ao comitê AGU")
-    st.write("""
-    Esta ferramenta processa arquivos de um ZIP gerado pelo SEI PRO, converte documentos nativos do SEI em PDF e, em seguida, cria um novo ZIP com os arquivos processados.
+    st.markdown("""
+   Esta ferramenta visa facilitar o atendimento aos procedimentos determinados pela AGU para envio de documentação para análise, realizando o processamento, extração, conversão e ajuste de nomes de todos os arquivos de forma automatizada.
+
+    Para utilizá-la é preciso gerar gerar uma versão ZIP do seu processo *SEI* a partir do excelente [**SEI PRO**](https://sei-pro.github.io/sei-pro/) e inseri-la aqui. Acesse o tutorial abaixo para mais instruções.
+
+
+
+
+
+
+
     """)
+
+
+
+
+
+    with st.expander("Ver tutorial completo"):
+        st.markdown("""
+            
+
+        # Tutorial: Conversor de processos SEI->AGU
+
+        Este tutorial guiará você através do processo de conversão de arquivos do SEI para o padrão AGU utilizando o Conversor de processos SEI->AGU.
+
+        ## Requisitos iniciais
+        1. **SEI PRO** - Antes de utilizar o Conversor de processos SEI->AGU, você deve ter instalado e ativo o [SEI PRO](https://sei-pro.github.io/sei-pro/). Este é uma extensão para navegadores que adiciona novas funcionalidades ao SEI convencional e está disponível para Chrome, Firefox, Edge, e outros navegadores baseados em Chromium.
+
+        ## Passo a passo
+
+        ### 1. Ativação e uso do SEI PRO
+
+        1. **Instale** o SEI PRO conforme seu navegador.
+        2. **Acesse** o processo SEI de seu interesse.
+        3. **Clique** na opção `Gerar Arquivo ZIP`.
+        
+        - Caso essa opção não esteja disponível, você pode se guiar pelas seguintes imagens:
+            - ![Ativar Menu](.static/ativar_menu.png)
+            - ![Gerar ZIP no Menu](.static/gerar_zip_menu.png)
+            - ![Personalizar Menu](.static/personalizar_menu.png)
+            - ![Selecionar Arquivos para ZIP](.static/selecionar_arquivos_zip.png)
+
+        4. **Selecione** os arquivos desejados na tela que surgirá.
+        5. **Clique** em `Gerar`.
+
+        ### 2. Preparação do arquivo ZIP
+
+        O arquivo ZIP gerado conterá:
+        - Documentos nativos do SEI em formato HTML.
+        - Outros arquivos em seus formatos nativos (normalmente PDF, XLS, ou ZIP).
+
+        ### 3. Utilização do Conversor de processos SEI->AGU
+
+        1. **Abra** o Conversor de processos SEI->AGU.
+        2. **Faça o upload** do arquivo ZIP gerado anteriormente.
+        3. **A ferramenta irá**:
+        - Converter documentos nativos do SEI em formato HTML para PDF.
+        - Extrair arquivos ZIP (incluindo ZIPs aninhados).
+        - Renomear arquivos para fácil referência ao processo original.
+        4. **Baixe** o novo arquivo ZIP gerado após a conversão.
+
+        ### 4. Inserção dos novos arquivos no SEI
+
+        1. **Descompacte** o novo arquivo ZIP em um diretório de sua escolha.
+        2. **Use** a ferramenta SEI PRO para inserir os arquivos em lote no SEI.
+        
+        - Se você não sabe como fazer o upload em lote, siga este tutorial: [UPLOADDOCS no SEI PRO](https://sei-pro.github.io/sei-pro/pages/UPLOADDOCS.html).
+        - Com a funcionalidade de upload em lote, você pode inserir vários arquivos no SEI de uma vez, e até mesmo organizar a ordem dos arquivos na árvore de processos (lembre-se de ativar essa opção).
+
+        ## Limitações
+
+        - O Conversor de processos SEI->AGU **não consegue converter arquivos DOC/DOCX para PDF**. Essa conversão terá que ser feita manualmente.
+
+        Esperamos que este tutorial tenha sido útil! Se você tiver alguma dúvida ou feedback, por favor, entre em contato com a equipe de suporte.
+   
+        """)
+        
 
     # Permita o upload do arquivo ZIP.
     uploaded_file = st.file_uploader("Escolha um arquivo ZIP", type="zip")
@@ -151,11 +229,7 @@ def main():
         # - Criar o novo arquivo ZIP
 
         # Criar nome de diretório de saída com o nome do arquivo e a data-hora atual.
-
-
-
-
-        
+       
 
         current_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         uploaded_filename = uploaded_file.name.rsplit('.', 1)[0]  # Extrai o nome sem a extensão
@@ -204,6 +278,8 @@ def main():
         st.session_state.already_processed = True
 
 
+
+
     # Mostre os botões de download para todos os arquivos processados
     for output_filename in st.session_state.output_filenames:
         with open(output_filename, "rb") as f:
@@ -214,30 +290,17 @@ def main():
                 mime="application/zip"
             )
 
+
+    
+
+
+
+
+
+
 if __name__ == "__main__":
     main()
 
-# #%%
-# #SEÇÃO PARA TESTES SIMPLES
-# current_datetime = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-# uploaded_file = "SEI_23071.934529_2023_95.zip"
-# output_folder = f"{uploaded_file}_{current_datetime}"
-# output_filename = f"{output_folder}_processado.zip"
 
 
-# # Extrai e processa o arquivo ZIP.
-# if not os.path.exists(output_folder):
-#     os.makedirs(output_folder)
-
-# extract_and_process_files(uploaded_file, output_folder)
-
-# remove_empty_files(output_folder)
-
-# # Crie um novo arquivo ZIP.
-# with zipfile.ZipFile(output_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-#     zip_dir(output_folder, zipf)
-
-
-# # Limpe os arquivos e diretórios temporários.
-# shutil.rmtree(output_folder)
-# # %%
+# %%
