@@ -1,6 +1,7 @@
 #%%
 import base64
 import datetime
+import time
 import os
 import shutil
 import string
@@ -106,10 +107,51 @@ def remove_empty_files(output_folder):
 
 # ESTA É UMA FUNÇÃO PROVISÓRIA, QUE IRÁ VARRER O DIRETÓRIO RAIZ PARA EXIBIR OS ARQUIVOS. A INTENÇÃO É ENTENDER COMO FUNCIONA A INSTÂNCIA DO STREAMLIT COM RELAÇÃO AOS ARQUIVOS CONVERTIDOS E ATUAR PARA EVITAR QUE O DISCO FIQUE SOBRECARREGADO
 def list_files_from_root():
-    """Lista todos os arquivos do diretório raiz."""
+    """Lista todos os arquivos do diretório raiz com tamanho e data de criação."""
     root_dir = os.path.dirname(os.path.abspath(__file__))  # Obtém o diretório atual do script.
     files = [f for f in os.listdir(root_dir) if os.path.isfile(os.path.join(root_dir, f))]
-    return files
+    
+    file_details = []
+    for file in files:
+        file_path = os.path.join(root_dir, file)
+        
+        # Tamanho do arquivo em bytes
+        file_size = os.path.getsize(file_path)
+        
+        # Data de criação do arquivo
+        creation_timestamp = os.path.getctime(file_path)
+        creation_date = datetime.datetime.fromtimestamp(creation_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+        
+        file_details.append((file, file_size, creation_date))
+    
+    return file_details
+
+
+
+
+def delete_old_zip_files():
+    """Exclui arquivos ZIP com mais de X horas."""
+    root_dir = os.path.dirname(os.path.abspath(__file__))  # Obtém o diretório atual do script.
+    current_time = time.time()  # Obtém o tempo atual em segundos.
+    
+
+    # Lista todos os arquivos ZIP do diretório.
+    zip_files = [f for f in os.listdir(root_dir) if f.endswith('.zip') and os.path.isfile(os.path.join(root_dir, f))]
+
+    deleted_files = []  # Lista de arquivos excluídos.
+
+    # Verifica cada arquivo ZIP.
+    for file in zip_files:
+        file_path = os.path.join(root_dir, file)
+        file_creation_time = os.path.getctime(file_path)  # Obtém o tempo de criação do arquivo em segundos.
+
+        
+        if current_time - file_creation_time > 43200:
+            os.remove(file_path)  # Remove o arquivo.
+            deleted_files.append(file)  # Adiciona o nome do arquivo à lista de arquivos excluídos.
+
+    return deleted_files
+
 
 #%% SEÇÃO MAIN
 
@@ -124,25 +166,31 @@ def main():
     # Defina o título e as informações da página.
     st.title("Conversor de arquivos para envio ao comitê AGU")
     st.markdown("""
-   Esta ferramenta visa facilitar o atendimento aos procedimentos determinados pela AGU para envio de documentação para análise, realizando o processamento, extração, conversão e ajuste de nomes de todos os arquivos de forma automatizada.
+                Esta ferramenta visa facilitar o atendimento aos procedimentos determinados pela AGU para envio de documentação para análise, realizando o processamento, extração, conversão e ajuste de nomes de todos os arquivos de forma automatizada.
 
-    Para utilizá-la é preciso gerar gerar uma versão ZIP do seu processo *SEI* a partir do excelente [**SEI PRO**](https://sei-pro.github.io/sei-pro/) e inseri-la aqui. Acesse o tutorial abaixo para mais instruções.
+                Para utilizá-la é preciso gerar gerar uma versão ZIP do seu processo *SEI* a partir do excelente [**SEI PRO**](https://sei-pro.github.io/sei-pro/) e inseri-la aqui. Acesse o tutorial abaixo para mais instruções.
     """)
 
-    with st.expander("Depuração"):
+    with st.expander("Depuração (apenas para testes da ferramenta)"):
         # Defina o título e as informações da página.
         st.write("Clique no botão abaixo para listar todos os arquivos do diretório raiz:")
         # Botão para listar arquivos.
         if st.button("Listar Arquivos"):
-            files = list_files_from_root()
-            if files:
-                st.write("Arquivos no diretório raiz:")
-                for file in files:
-                    st.write(file)
+            file_details = list_files_from_root()
+            if file_details:
+                st.write("Detalhes dos arquivos no diretório raiz:")
+                for file_info in file_details:
+                    st.write(f"Nome: {file_info[0]}, Tamanho: {file_info[1]} bytes, Data de criação: {file_info[2]}")
             else:
                 st.write("Nenhum arquivo encontrado no diretório raiz.")
-
-
+        if st.button("Excluir Arquivos ZIP Antigos"):
+            deleted_files = delete_old_zip_files()
+            if deleted_files:
+                st.write("Arquivos ZIP excluídos:")
+                for file in deleted_files:
+                    st.write(file)
+            else:
+                st.write("Nenhum arquivo ZIP antigo encontrado para exclusão.")
 
 
 
