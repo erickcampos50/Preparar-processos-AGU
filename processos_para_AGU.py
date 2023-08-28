@@ -103,6 +103,14 @@ def remove_empty_files(output_folder):
             # st.write(f"Arquivo {item} removido por ter tamanho zero.")
 
 
+
+# ESTA É UMA FUNÇÃO PROVISÓRIA, QUE IRÁ VARRER O DIRETÓRIO RAIZ PARA EXIBIR OS ARQUIVOS. A INTENÇÃO É ENTENDER COMO FUNCIONA A INSTÂNCIA DO STREAMLIT COM RELAÇÃO AOS ARQUIVOS CONVERTIDOS E ATUAR PARA EVITAR QUE O DISCO FIQUE SOBRECARREGADO
+def list_files_from_root():
+    """Lista todos os arquivos do diretório raiz."""
+    root_dir = os.path.dirname(os.path.abspath(__file__))  # Obtém o diretório atual do script.
+    files = [f for f in os.listdir(root_dir) if os.path.isfile(os.path.join(root_dir, f))]
+    return files
+
 #%% SEÇÃO MAIN
 
 def main():
@@ -119,14 +127,20 @@ def main():
    Esta ferramenta visa facilitar o atendimento aos procedimentos determinados pela AGU para envio de documentação para análise, realizando o processamento, extração, conversão e ajuste de nomes de todos os arquivos de forma automatizada.
 
     Para utilizá-la é preciso gerar gerar uma versão ZIP do seu processo *SEI* a partir do excelente [**SEI PRO**](https://sei-pro.github.io/sei-pro/) e inseri-la aqui. Acesse o tutorial abaixo para mais instruções.
-
-
-
-
-
-
-
     """)
+
+    with st.expander("Depuração"):
+        # Defina o título e as informações da página.
+        st.write("Clique no botão abaixo para listar todos os arquivos do diretório raiz:")
+        # Botão para listar arquivos.
+        if st.button("Listar Arquivos"):
+            files = list_files_from_root()
+            if files:
+                st.write("Arquivos no diretório raiz:")
+                for file in files:
+                    st.write(file)
+            else:
+                st.write("Nenhum arquivo encontrado no diretório raiz.")
 
 
 
@@ -150,21 +164,30 @@ def main():
         1. **Instale** o SEI PRO conforme seu navegador.
         2. **Acesse** o processo SEI de seu interesse.
         3. **Clique** na opção `Gerar Arquivo ZIP`.
-        
-        - Caso essa opção não esteja disponível, você pode se guiar pelas seguintes imagens:
-            - ![Ativar Menu](.static/ativar_menu.png)
-            - ![Gerar ZIP no Menu](.static/gerar_zip_menu.png)
-            - ![Personalizar Menu](.static/personalizar_menu.png)
-            - ![Selecionar Arquivos para ZIP](.static/selecionar_arquivos_zip.png)
+        ![Gerar ZIP no Menu](app/static/gerar_zip_menu.png)
+            - Caso essa opção não esteja disponível, você pode se guiar pelas seguintes imagens:
+                - Passe o mouse sobre o número do processo e clique em **Personalizar Menu**
+                ![Personalizar Menu](app/static/personalizar_menu.png)
+                - Dentro as opçoes que surgirem procure e ative aquela que diz **Gerar Arquivo ZIP do Processo**
+                ![Ativar Menu](app/static/ativar_menu.png)
+
+                - Pronto! Agora você pode gerar um arquivo ZIP contendo todos os arquivos do processo.Após clicar em **Gerar Arquivo ZIP** É possível selecionar quais arquivos irão compor o ZIP.
+                
 
         4. **Selecione** os arquivos desejados na tela que surgirá.
+        ![Selecionar Arquivos para ZIP](app/static/selecionar_arquivos_zip.png)
         5. **Clique** em `Gerar`.
 
-        ### 2. Preparação do arquivo ZIP
+        ### 2. Conhecendo o arquivo ZIP
 
         O arquivo ZIP gerado conterá:
         - Documentos nativos do SEI em formato HTML.
         - Outros arquivos em seus formatos nativos (normalmente PDF, XLS, ou ZIP).
+        
+        A partir deste ponto já seria possível criar um novo processo com caracteristicas identicas ao processo original (sem perder as assinaturas 
+        como ocorre caso você duplique o processo utilizando o SEI PRO). 
+                    
+        No entanto o comitê da AGU, até a presente data, só permite que sejam incluidos arquivos nos foramtos PDF ou XLS no processo. O que demanda que todos os arquivos compactados estejam descompactados, que os arquivos HTML/JPG/PNG/DOC estejam convertidos em PDF e que todos sejam nomeados de forma legível.
 
         ### 3. Utilização do Conversor de processos SEI->AGU
 
@@ -173,7 +196,10 @@ def main():
         3. **A ferramenta irá**:
         - Converter documentos nativos do SEI em formato HTML para PDF.
         - Extrair arquivos ZIP (incluindo ZIPs aninhados).
-        - Renomear arquivos para fácil referência ao processo original.
+        - Converter todos os outros formatos de arquivo para PDF (exceto XLS e DOC)
+        - Renomear todos os arquivos para fácil referência ao processo original.
+        - Gerar um novo arquivo ZIP com o resultado final de todas as etapas
+                            
         4. **Baixe** o novo arquivo ZIP gerado após a conversão.
 
         ### 4. Inserção dos novos arquivos no SEI
@@ -181,14 +207,14 @@ def main():
         1. **Descompacte** o novo arquivo ZIP em um diretório de sua escolha.
         2. **Use** a ferramenta SEI PRO para inserir os arquivos em lote no SEI.
         
-        - Se você não sabe como fazer o upload em lote, siga este tutorial: [UPLOADDOCS no SEI PRO](https://sei-pro.github.io/sei-pro/pages/UPLOADDOCS.html).
+        - Se você não sabe como fazer o upload em lote, siga este tutorial: [Inserir arquivos externos em lote usando SEI PRO](https://sei-pro.github.io/sei-pro/pages/UPLOADDOCS.html).
         - Com a funcionalidade de upload em lote, você pode inserir vários arquivos no SEI de uma vez, e até mesmo organizar a ordem dos arquivos na árvore de processos (lembre-se de ativar essa opção).
 
         ## Limitações
 
         - O Conversor de processos SEI->AGU **não consegue converter arquivos DOC/DOCX para PDF**. Essa conversão terá que ser feita manualmente.
 
-        Esperamos que este tutorial tenha sido útil! Se você tiver alguma dúvida ou feedback, por favor, entre em contato com a equipe de suporte.
+        Esperamos que este tutorial tenha sido útil!
    
         """)
         
