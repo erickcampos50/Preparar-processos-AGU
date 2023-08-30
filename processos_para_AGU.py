@@ -1,4 +1,5 @@
 #%%
+import time
 import base64
 import datetime
 import time
@@ -7,6 +8,7 @@ import shutil
 import string
 import zipfile
 import re
+import subprocess
 from PIL import Image
 import pdfkit
 import streamlit as st
@@ -65,16 +67,13 @@ def process_directory(directory):
                     target_path = os.path.join(directory, target_name)
                     with inner_zip.open(member) as source, open(target_path, "wb") as target:
                         target.write(source.read())
-                    
                     # Rename extracted file to safe name
                     rename_file(target_path, directory)
-                    
             os.remove(current_path)
 
 def extract_and_process_files(zip_path, output_folder):
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(output_folder)
-    
     process_directory(output_folder)
     convert_all_html_to_pdf(output_folder)
 
@@ -82,6 +81,8 @@ def extract_and_process_files(zip_path, output_folder):
     while any(fname.endswith(extensions_to_check) for fname in os.listdir(output_folder)):
         process_directory(output_folder)
         convert_all_html_to_pdf(output_folder)
+    
+    
 
 def convert_all_html_to_pdf(output_folder):
     for root, _, files in os.walk(output_folder):
@@ -91,6 +92,21 @@ def convert_all_html_to_pdf(output_folder):
                 pdf_path = os.path.splitext(html_path)[0] + '.pdf'
                 convert_html_to_pdf(html_path, pdf_path)
                 os.remove(html_path)
+
+
+
+def convert_office_to_pdf(directory):
+    for root, _, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            _, extension = os.path.splitext(file)
+            if extension.lower() in ['.doc', '.docx', '.odt', '.xls','.xlsx']:
+                try:
+                    subprocess.run(['libreoffice', '--headless', '--convert-to', 'pdf', '--outdir', directory, file_path])
+                    # time.sleep(15) # Sleep for 3 seconds
+                except Exception as e:
+                    st.error(f"Error converting {file_path} to PDF. Error: {e}")
+
 
 def zip_dir(path, ziph):
     for root, _, files in os.walk(path):
@@ -377,10 +393,13 @@ def main():
             os.makedirs(output_folder)
         
         extract_and_process_files(temp_filename, output_folder)
+        progress_bar.progress(75)   
+        progress_text.text("75% completo: Iniciando a conversão das planilhas e documentos")
+        convert_office_to_pdf(output_folder)
 
         # Atualize a barra de progresso
-        progress_bar.progress(75)   
-        progress_text.text("75% completo: Arquivos extraídos e processados. Gerando arquivo final")
+        progress_bar.progress(85)   
+        progress_text.text("85% completo: Arquivos extraídos e processados. Gerando arquivo final")
 
 
         remove_empty_files(output_folder)
