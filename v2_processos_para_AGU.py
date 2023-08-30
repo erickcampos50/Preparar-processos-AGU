@@ -6,15 +6,14 @@ import os
 import shutil
 import string
 import zipfile
-import re
 from PIL import Image
 import pdfkit
 import streamlit as st
 #%%
 # Constantes
-VALID_CHARS = set("-_.()[] %s%s" % (string.ascii_letters, string.digits))
+VALID_CHARS = set(".()[] %s%s" % (string.ascii_letters, string.digits))
 IMAGE_EXTS = {'.jpeg', '.jpg', '.png'}
-OTHER_EXTS = {'.doc', '.docx', '.xls', '.xlsx'}
+OTHER_EXTS = {'.DOC', '.DOCX', '.doc', '.docx', '.xls', '.xlsx'}
 
 #%%
 def safe_filename(filename):
@@ -26,12 +25,7 @@ def convert_html_to_pdf(html_path, pdf_path):
     except Exception as e:
         st.error(f"Error converting {html_path} to PDF. Error: {e}")
 
-def rename_file(original_path, directory):
-    original_name = os.path.basename(original_path)
-    # Remove parts that match the regex pattern, keeping the "]"
-    new_name = re.sub(r"(?<=])\-(\d+)_", "-", original_name)
-    # Ensure the filename only contains valid characters
-    new_name = safe_filename(new_name)
+def rename_file(original_path, new_name, directory):
     new_path = os.path.join(directory, new_name)
     os.rename(original_path, new_path)
     return new_path
@@ -45,7 +39,7 @@ def process_directory(directory):
 
         # Rename file to safe name
         safe_name = safe_filename(item)
-        current_path = rename_file(current_path, directory)
+        current_path = rename_file(current_path, safe_name, directory)
 
         if extension in IMAGE_EXTS:
             with Image.open(current_path) as image:
@@ -65,10 +59,6 @@ def process_directory(directory):
                     target_path = os.path.join(directory, target_name)
                     with inner_zip.open(member) as source, open(target_path, "wb") as target:
                         target.write(source.read())
-                    
-                    # Rename extracted file to safe name
-                    rename_file(target_path, directory)
-                    
             os.remove(current_path)
 
 def extract_and_process_files(zip_path, output_folder):
@@ -420,9 +410,18 @@ def main():
     st.caption("""
                 ###### **Créditos:** Esta aplicação foi desenvolvida por Erick C. Campos para Universidade Federal de Juiz de Fora - Campus GV para atuar em sintonia com a excelente ferramenta SEI PRO desenvolvida por Pedro Soares.""")
 
-#%%
+
+    
+
+
+
+
+
+
 if __name__ == "__main__":
     main()
     # Esta função irá remover os arquivos antigos antes do inicio das atividades para evitar que haja estouro do armazenamento na criação de novos arquivos pelo usuário atual
     delete_old_zip_files()
 
+
+# %%
