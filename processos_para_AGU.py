@@ -170,7 +170,7 @@ def main():
         st.session_state.output_filenames = []
 
     # Defina o título e as informações da página.
-    st.title("Conversor de arquivos para envio ao comitê AGU")
+    st.title("Conversor de processos SEI->AGU")
     st.markdown("""
                 Esta ferramenta visa facilitar o atendimento aos procedimentos determinados pela AGU para envio de documentação para análise, realizando o processamento, extração, conversão e ajuste de nomes de todos os arquivos de forma automatizada.
 
@@ -183,7 +183,7 @@ def main():
         st.markdown("""
             
 
-        # Tutorial: Conversor de processos SEI->AGU
+        # Conversor de arquivos de processos SEI para padrão AGU
 
         Este tutorial guiará você através do processo de conversão de arquivos do SEI para o padrão AGU utilizando o Conversor de processos SEI->AGU.
 
@@ -192,11 +192,7 @@ def main():
         ## Tutorial em vídeo
         
         Foi preparado um tutorial em vídeo com todas as etapas. 
-            
-            Obs: a conversão dos arquivos DOC para 
-            PDF não é realizada por essa ferramenta.
-            Veja como converter estes arquivos no final do tutorial.
-                    
+      
         [Link para o vídeo](https://youtu.be/jOe9KC67sWQ)
                     
         ## Requisitos iniciais
@@ -266,74 +262,7 @@ def main():
         """
         )
                     
-        
-        st.markdown(""" 
-            ---
-            # Tutorial avançado para converter arquivos DOC/DOCX/ODT para PDF utilizando o Libreoffice            
-                    
- 
-
- 
-
-            Este tutorial guiará você através dos passos para converter arquivos `.doc`, `.docx` e `.odt` para `.pdf` usando um script PowerShell em conjunto com o LibreOffice.
-
-            ## **⚠️ Avisos Importantes:**
-
-            - **Riscos de Segurança:** Sempre seja cauteloso ao executar scripts de fontes desconhecidas. Antes de executar qualquer script, verifique e entenda o que ele faz. Executar scripts mal-intencionados pode danificar seu sistema ou comprometer sua privacidade.
-            
-            - **Backup de Dados:** Antes de executar o script, faça backup dos seus dados. Embora o script seja projetado para converter arquivos, sempre há riscos potenciais.
-
-            ## **Pré-requisitos:**
-
-            1. **LibreOffice Instalado:** Certifique-se de ter o LibreOffice instalado em seu computador. Se não tiver, você pode baixá-lo e instalá-lo a partir [deste link](https://pt-br.libreoffice.org/).
-
-            2. **PowerShell:** Este tutorial é baseado no uso do PowerShell, que é uma ferramenta padrão em sistemas Windows modernos.
-
-            ## **Passos para Execução do Script:**
-
-            1. **Preparando o Diretório:**
-
-                Coloque todos os arquivos que deseja converter no mesmo diretório (pasta).
-
-            2. **Criando o Script:**
-
-                Abra o Bloco de Notas ou seu editor de texto favorito e copie o script fornecido anteriormente. Salve o arquivo com a extensão `.ps1`, por exemplo, `ConvertToPDF.ps1`.
-
-            3. **Executando o Script:**
-
-                a. Abra o PowerShell como administrador (isto é importante para garantir que o script tenha as permissões necessárias para funcionar corretamente).
-                
-                b. Navegue até o diretório onde você salvou o script. Por exemplo:
-                
-                ```
-                cd "C:\caminho\para\o\script"
-                ```
-                
-                c. Execute o script:
-                
-                ```
-                .\ConvertToPDF.ps1
-                ```
-
-            4. **Processo de Conversão:**
-
-                O script começará a converter cada arquivo no diretório atual para o formato `.pdf`. Após a conversão de todos os arquivos, ele perguntará se você deseja deletar os arquivos originais. Responda com "Sim" ou "Não" conforme sua preferência.
-
-            5. **Verifique os Arquivos Convertidos:**
-
-                Após a execução do script, verifique o diretório para garantir que todos os seus arquivos foram convertidos corretamente.
-
-            ## **Conclusão:**
-
-            Parabéns! Se você seguiu todos os passos, deve ter seus arquivos convertidos para o formato `.pdf`. Lembre-se de sempre fazer backup de seus dados antes de realizar operações como esta e esteja ciente dos riscos ao executar scripts.
-
-            --- 
-
-            Espero que este tutorial seja útil! Se você tiver mais perguntas ou preocupações, fique à vontade para perguntar.
-
-
-            [Baixar script](app/static/ConvertToPDF.ps1)
-                        """)
+       
         
 
     # Permita o upload do arquivo ZIP.
@@ -396,13 +325,12 @@ def main():
         progress_bar.progress(75)   
         progress_text.text("75% completo: Iniciando a conversão das planilhas e documentos")
         convert_office_to_pdf(output_folder)
+        remove_empty_files(output_folder)
 
         # Atualize a barra de progresso
         progress_bar.progress(85)   
         progress_text.text("85% completo: Arquivos extraídos e processados. Gerando arquivo final")
 
-
-        remove_empty_files(output_folder)
 
         # Crie um novo arquivo ZIP.
         with zipfile.ZipFile(output_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
