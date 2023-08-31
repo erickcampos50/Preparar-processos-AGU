@@ -12,13 +12,13 @@ import subprocess
 from PIL import Image
 import pdfkit
 import streamlit as st
-#%%
+#%% CONSTANTES
 # Constantes
 VALID_CHARS = set("-_.()[] %s%s" % (string.ascii_letters, string.digits))
 IMAGE_EXTS = {'.jpeg', '.jpg', '.png'}
 OTHER_EXTS = {'.doc', '.docx', '.xls', '.xlsx'}
 
-#%%
+#%% FUNÇÕES
 def safe_filename(filename):
     return ''.join(c for c in filename if c in VALID_CHARS)
 
@@ -154,7 +154,7 @@ def delete_old_zip_files():
     return deleted_files
 
 
-#%% SEÇÃO MAIN
+#%% PÁGINA PRINCIPAL
 
 def main():
 
@@ -170,7 +170,7 @@ def main():
         st.session_state.output_filenames = []
 
     # Defina o título e as informações da página.
-    st.title("Conversor de processos SEI->AGU")
+    st.title("Conversor de processos SEI->AGU 0.9")
     st.markdown("""
                 Esta ferramenta visa facilitar o atendimento aos procedimentos determinados pela AGU para envio de documentação para análise, realizando o processamento, extração, conversão e ajuste de nomes de todos os arquivos de forma automatizada.
 
@@ -253,7 +253,7 @@ def main():
 
         ## Limitações
 
-        - O Conversor de processos SEI->AGU **não consegue converter arquivos DOC/DOCX para PDF**. Essa conversão terá que ser feita manualmente.
+        - O Conversor de processos SEI->AGU não faz ajuste de formatação nas planilhas que converte, podendo o resultado não ficar ideal. Recomenda-se revisar estes documentos antes do envio para AGU. 
 
         Esperamos que este tutorial tenha sido útil!
                     
